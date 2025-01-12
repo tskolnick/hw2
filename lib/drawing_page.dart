@@ -24,8 +24,11 @@ void onPanStart(DragStartDetails details) {
   print('User started drawing');
   final box = context.findRenderObject() as RenderBox;
   final point = box.globalToLocal(details.globalPosition);
+
+
   setState((){
     line = DrawnLine([point], selectedColor, selectedWidth);
+    lines.add(line);
   });
 
 }
@@ -33,9 +36,9 @@ void onPanStart(DragStartDetails details) {
 void onPanUpdate(DragUpdateDetails details) {
   final box = context.findRenderObject() as RenderBox;
   final point = box.globalToLocal(details.globalPosition);
-  final path = line.path..add(point);
+
   setState((){
-    line = DrawnLine(path, selectedColor, selectedWidth);
+    lines.last.path.add(point);
   });
 
 }
@@ -43,18 +46,19 @@ void onPanUpdate(DragUpdateDetails details) {
 
 void onPanEnd(DragEndDetails details) {
   print('User ended drawing');
-   _startLineAnimation();
+  erase_line( lines.last);
 }
 
-void _startLineAnimation() {
+void erase_line( current_line ) {
 
 
   Timer.periodic(Duration(milliseconds: 5), (timer) {
     setState(() {
-      if (line.path.length > 1) {
-        line = DrawnLine(line.path.sublist(1), selectedColor, selectedWidth);
+      if (current_line.path.isNotEmpty) {
+        current_line.path.removeAt(0);
       } else {
         timer.cancel();
+        lines.remove(current_line);
       }
     });
   });
@@ -74,7 +78,7 @@ GestureDetector buildCurrentPath(BuildContext context) {
         height: MediaQuery.of(context).size.height,
         // CustomPaint widget will go here
         child: CustomPaint(
-          painter: Sketcher(lines: [line]),
+          painter: Sketcher(lines: lines),
         ),
       ),
     ),
